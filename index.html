@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="張家華（Jone）的互動履歷小遊戲：約 90 秒打倒 4 隻 Boss，認識一位遊戲營運企劃。">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Jone 的職涯冒險</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Press+Start+2P&display=swap">
+<style>
+/* Layout: one column — status bar, handheld "console" (3:2 pixel screen + RPG message window), hint; parchment cards for résumé views */
+:root{
+  --night:#232741; --night-2:#30365a; --text:#f4ecdc; --text-dim:#b7b2c8;
+  --win:#1b1f3b; --win-line:#fff5df;
+  --paper:#fff5df; --paper-2:#f3e0b8; --ink:#2a2238; --ink-soft:#6a5a70;
+  --sun:#ff8a3d; --teal:#2fa596; --gold:#f2c14e; --hp:#ff5d5d;
+  --display:"Press Start 2P", ui-monospace, "Courier New", monospace;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--night);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.7;
+  background-image:radial-gradient(var(--night-2) 1.2px,transparent 1.3px);background-size:22px 22px}
+.wrap{max-width:860px;margin:0 auto;padding-block:20px 32px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:14px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 14px}
+.bar-left{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;min-width:0}
+.logo{font:12px/1 var(--display);color:var(--gold);text-shadow:2px 2px 0 var(--ink)}
+.steps{display:flex;gap:4px;margin:0;padding:0;list-style:none}
+.steps li{min-width:24px;height:22px;padding:0 4px;display:grid;place-items:center;font-size:12px;font-weight:700;
+  background:var(--night-2);color:var(--text-dim);border:2px solid var(--ink)}
+.steps li.done{background:var(--teal);color:#fff}
+.steps li.now{background:var(--sun);color:var(--ink)}
+.lv{font:10px/1 var(--display);background:var(--paper);color:var(--ink);padding:6px 8px;border:2px solid var(--ink);box-shadow:0 2px 0 var(--ink)}
+.lv.bump{animation:bump .6s}
+@keyframes bump{30%{transform:scale(1.35);background:var(--gold)}}
+.btn{font:700 15px/1.2 var(--body);background:var(--sun);color:var(--ink);border:3px solid var(--ink);
+  padding:9px 16px;box-shadow:0 4px 0 var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn.ghost{background:var(--paper)}
+.btn.small{font-size:13px;padding:6px 12px;box-shadow:0 3px 0 var(--ink)}
+:focus-visible{outline:3px dashed var(--gold);outline-offset:3px}
+
+.console{position:relative;background:var(--win);margin:12px 12px 20px;width:calc(100% - 24px);
+  box-shadow:0 0 0 4px var(--ink),0 0 0 8px var(--paper-2),0 0 0 12px var(--ink),10px 14px 0 10px rgba(0,0,0,.3)}
+.screen{position:relative;width:100%;aspect-ratio:3/2;overflow:hidden;background:#7ec8f2;cursor:pointer}
+#cv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.panel{padding:10px;border-top:4px solid var(--ink);cursor:pointer}
+.win{border:3px solid var(--win-line);border-radius:4px;padding:12px 16px;min-height:clamp(112px,17vw,140px);
+  box-shadow:inset 0 0 0 2px #3a4170;color:var(--paper);display:flex;flex-direction:column;justify-content:center;gap:8px}
+.msg{margin:0;font-size:clamp(15px,2vw,17px);line-height:1.75;font-weight:700}
+.who{display:inline-block;font-size:12px;color:var(--gold);margin-right:6px}
+.caret{display:inline-block;margin-left:6px;color:var(--gold);font-size:12px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.prompt{margin:0;font-size:13px;color:var(--text-dim)}
+.cmds{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.cmd{position:relative;text-align:left;background:transparent;color:var(--paper);border:2px solid rgba(255,245,223,.35);
+  padding:7px 10px 7px 28px;cursor:pointer;font-family:var(--body);min-width:0}
+.cmd::before{content:"▶";position:absolute;left:9px;top:9px;font-size:11px;color:var(--gold);opacity:0}
+.cmd:hover,.cmd:focus-visible{border-color:var(--gold);background:rgba(242,193,78,.08);outline:none}
+.cmd:hover::before,.cmd:focus-visible::before{opacity:1}
+.cmd b{display:block;font-size:15px;line-height:1.35}
+.cmd span{display:block;font-size:12px;color:var(--text-dim);line-height:1.4}
+.cmd:disabled{opacity:.32;cursor:default}
+.cmd:disabled::before{opacity:0}
+.reward{display:flex;flex-direction:column;gap:8px}
+.rw-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.rw-up{font:12px/1.4 var(--display);color:var(--gold)}
+.rw-lv{font:10px/1.4 var(--display);color:var(--paper)}
+.rw-beat{font-size:13px;color:var(--text-dim)}
+.rw-title{margin:0;font-weight:900;color:var(--gold);font-size:14px}
+.gains{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2px 16px}
+.gains li{position:relative;padding-left:16px;font-weight:700;font-size:14px}
+.gains li::before{content:"▲";position:absolute;left:0;top:.2em;font-size:10px;color:#7ee0a0}
+.learn{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--text-dim)}
+.learn .sk{border:2px solid var(--teal);color:#bff3ea;padding:0 6px;font-size:12px;font-weight:700}
+.reward .btn{align-self:flex-end}
+.final{display:flex;flex-wrap:wrap;gap:10px}
+
+.bossbar{position:absolute;top:8px;right:8px;width:min(48%,240px);background:rgba(27,31,59,.88);border:2px solid var(--paper);
+  padding:4px 8px 6px;color:var(--paper);font-size:clamp(11px,1.5vw,13px);font-weight:700;z-index:2}
+.bossbar .hpbar{height:7px;background:#3a3f63;margin-top:3px}
+.bossbar .hpbar i{display:block;height:100%;width:100%;background:var(--hp);transition:width .45s steps(8)}
+.chcard{position:absolute;inset:0;display:grid;place-items:center;background:rgba(27,31,59,.5);z-index:3;animation:fadein .35s}
+.chcard div{background:var(--paper);color:var(--ink);border:3px solid var(--ink);box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--ink);
+  padding:12px 22px;text-align:center}
+.chcard .pix{font:clamp(8px,1.3vw,11px)/1.4 var(--display);color:var(--sun)}
+.chcard h2{margin:4px 0 0;font-size:clamp(18px,3.4vw,28px);font-weight:900;line-height:1.3}
+.chcard p{margin:0;font-size:clamp(11px,1.5vw,14px);color:var(--ink-soft);font-weight:700}
+@keyframes fadein{from{opacity:0}}
+.float{position:absolute;transform:translate(-50%,-50%);font-weight:900;font-size:clamp(14px,2.6vw,22px);white-space:nowrap;
+  color:#fff;text-shadow:2px 2px 0 var(--ink),-1px -1px 0 var(--ink),1px -1px 0 var(--ink),-1px 1px 0 var(--ink);
+  pointer-events:none;z-index:2;animation:rise 1.4s ease-out forwards}
+.float.big{color:var(--gold);font-size:clamp(18px,3.4vw,30px)}
+.float.weak{color:#c9c9d6}
+@keyframes rise{0%{opacity:0;margin-top:10px}15%{opacity:1;margin-top:0}75%{opacity:1}100%{opacity:0;margin-top:-26px}}
+
+.title{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(8px,1.8vw,16px);text-align:center;padding:16px;background:rgba(35,39,65,.84)}
+.eyebrow{font:clamp(9px,1.3vw,12px)/1 var(--display);color:var(--gold);margin:0;text-shadow:2px 2px 0 var(--ink)}
+.title h1{margin:0;font-weight:900;font-size:clamp(26px,6vw,50px);line-height:1.15;color:var(--paper);
+  text-shadow:3px 3px 0 var(--ink),-1px -1px 0 var(--ink),1px -1px 0 var(--ink),-1px 1px 0 var(--ink);text-wrap:balance}
+.lede{margin:0;max-width:30em;font-size:clamp(14px,1.8vw,16px)}
+.actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.meta{margin:0;font-size:12px;color:var(--text-dim)}
+.hint{margin:0;font-size:13px;color:var(--text-dim);text-align:center}
+.foot{margin:0;font-size:12px;color:var(--text-dim);text-align:center;opacity:.8}
+
+.modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(18,20,38,.62);
+  padding-block:calc(20px + env(safe-area-inset-top,0px)) calc(20px + env(safe-area-inset-bottom,0px));
+  padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+.card{background:var(--paper);color:var(--ink);border:3px solid var(--ink);width:min(620px,100%);max-height:100%;
+  display:flex;flex-direction:column;box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--ink),10px 12px 0 6px rgba(0,0,0,.35)}
+.card-body{overflow:auto;padding:22px 24px 8px;min-height:0}
+.card-foot{padding:12px 24px 18px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;border-top:2px dashed var(--paper-2)}
+.badge{display:inline-block;font:9px/1 var(--display);background:var(--badge,var(--sun));color:#fff;
+  padding:6px 8px;border:2px solid var(--ink);text-shadow:1px 1px 0 var(--ink)}
+.card h2{margin:10px 0 2px;font-size:24px;font-weight:900;line-height:1.3;text-wrap:balance}
+.m-meta{margin:0 0 10px;color:var(--ink-soft);font-size:14px;font-weight:700}
+.m-intro{margin:0 0 14px;padding:10px 12px;background:#fff;border-left:4px solid var(--badge,var(--sun))}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;margin:0 0 14px}
+.stat{background:var(--paper-2);border:2px solid var(--ink);padding:8px 10px;min-width:0}
+.stat b{display:block;font-size:22px;font-weight:900;line-height:1.2;font-variant-numeric:tabular-nums}
+.stat span{display:block;font-size:12px;color:var(--ink-soft);line-height:1.4}
+.m-list{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:6px}
+.m-list li{position:relative;padding-left:18px}
+.m-list li::before{content:"";position:absolute;left:2px;top:.62em;width:7px;height:7px;background:var(--badge,var(--sun));box-shadow:1px 1px 0 var(--ink)}
+.group{margin:0 0 14px}
+.group h3{margin:0 0 6px;font-size:13px;letter-spacing:.08em;color:var(--ink-soft)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{border:2px solid var(--ink);background:#fff;padding:1px 8px;font-size:13px}
+.tag.hot{background:var(--gold)}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 14px}
+.ov{padding-bottom:14px;margin-bottom:16px;border-bottom:3px dashed var(--paper-2)}
+.ov:last-child{border-bottom:0}
+.sheet{display:flex;gap:16px;align-items:center;margin-bottom:14px}
+.portrait{flex:none;background:var(--paper-2);border:3px solid var(--ink);padding:8px;line-height:0}
+.portrait canvas{width:72px;height:96px;image-rendering:pixelated}
+.sheet .id{min-width:0}
+.sheet h2{margin:8px 0 0}
+.bars{display:grid;gap:6px}
+.bars div{display:grid;grid-template-columns:5.5em 1fr;align-items:center;gap:10px;font-size:13px;font-weight:700}
+.bars i{display:block;height:12px;background:var(--paper-2);border:2px solid var(--ink);position:relative}
+.bars i::after{content:"";position:absolute;inset:0;width:var(--v);background:var(--c,var(--teal))}
+@media (max-width:620px){
+  .lede,.meta{display:none}
+  .btn{font-size:14px;padding:7px 12px}
+  .card-body{padding:18px 16px 6px}.card-foot{padding:10px 16px 14px}
+  .card h2{font-size:21px}
+  .win{padding:10px 12px}
+  .cmds{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="bar-left">
+      <span class="logo">JONE'S QUEST</span>
+      <ol class="steps" id="steps" aria-label="章節進度"></ol>
+      <span class="lv" id="lvTag">LV.1</span>
+    </div>
+    <button class="btn ghost small" id="ovBtn" type="button">履歷總覽</button>
+  </div>
+
+  <div class="console" id="console">
+    <div class="screen" id="screen">
+      <canvas id="cv" width="384" height="256" aria-label="Jone 的職涯冒險遊戲畫面"></canvas>
+      <div id="floats"></div>
+      <div class="bossbar" id="bossbar" hidden><span id="bossName"></span><div class="hpbar"><i id="bossHp"></i></div></div>
+      <div class="chcard" id="chcard" hidden><div><span class="pix" id="chTag"></span><h2 id="chTitle"></h2><p id="chSub"></p></div></div>
+    </div>
+    <div class="panel" id="panelWrap"><div class="win" id="panel" aria-live="polite"><p class="msg">準備開始冒險……</p></div></div>
+    <div class="title" id="title">
+      <p class="eyebrow">JONE'S QUEST</p>
+      <h1>Jone 的職涯冒險</h1>
+      <p class="lede">跟著遊戲營運企劃張家華，打倒 4 隻 Boss，看他一路從 LV.1 升到 LV.8。</p>
+      <div class="actions">
+        <button class="btn" id="startBtn" type="button">▶ 開始冒險</button>
+        <button class="btn ghost" id="skipBtn" type="button">直接看履歷</button>
+      </div>
+      <p class="meta">約 90 秒・點畫面或按 Enter 繼續</p>
+    </div>
+  </div>
+
+  <p class="hint">點畫面、對話框，或按 Enter／空白鍵繼續・隨時可按「履歷總覽」看完整內容</p>
+  <p class="foot">這個遊戲由 Jone 與 AI 協作製作，像素素材皆為原創繪製。</p>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="card-body" id="mBody"></div>
+    <div class="card-foot" id="mFoot"></div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const LINK104='https://pda.104.com.tw/profile/share/iaH1y6NDaANJP48fJdB4yJfnHDDDcfW5';
+/* ---------- résumé content (overview) ---------- */
+const PLACES={
+  home:{badge:'START',color:'#e5735c',title:'關於我',meta:'Jone 張家華｜遊戲營運企劃・資深專員',
+    intro:'我是一個從玩家出發的遊戲企劃。退伍後有幸加入自己最熱愛的產品團隊，這些年來經歷了穩定營運、代理產品上市，到自研產品研發推動。我個性活潑正向，喜歡與人溝通合作，也勇於嘗試新工具。',
+    stats:[['8 年+','遊戲營運經驗'],['3 款','參與產品'],['資深專員','現任職級']],
+    items:['學歷：真理大學 企業管理學系（2012–2017）','第一份工作：法務部行政執行署 秘書（2017–2018），負責執行官的文書業務','擅長對外溝通、行銷策略制定與執行，以及跨部門合作','目標：成為一個不只「想得到」，也能「做得到」的企劃']},
+  tower:{badge:'2018-2020',color:'#5b7fd6',title:'新楓之谷',meta:'遊戲橘子｜營運企劃｜MMORPG',
+    intro:'我的第一款產品，也是我最熱愛的遊戲。在這裡從穩定的產品中學習營運的精髓，經歷過不如預期的版本，也參與提出創新的營運手段。',
+    stats:[['+200%','官網瀏覽人數'],['+30%','廣告曝光次數'],['4 家','異業合作品牌']],
+    items:['與 ASUS ROG、味丹、PONY、THERMOS 膳魔師進行改版異業合作','主導官方網站翻新，兩個月完成現代化與行動版瀏覽體驗','提出玩家 KOL 計畫「楓樹種子」，並負責合作玩家管理','改版宣傳素材製作與發包、粉絲團經營，與行銷部門協作']},
+  arena:{badge:'2020-2024',color:'#e0a83a',title:'彈射世界',meta:'遊戲橘子｜產品主企劃｜彈珠台動作 RPG',
+    intro:'我主動請調負責新產品上市，第一次擔任產品主企劃。這是一款 source code 產品，公司內部經驗有限，前期花了大量時間摸索原始檔案，並建立標準流程。',
+    stats:[['122%','上市下載目標達成'],['+31.37%','一週年活動 DAU'],['+12.53%','一週年首 7 日回流'],['近 500 篇','體驗心得擴散']],
+    items:['負責上市籌備，提案產品定位與上市策略，事前預約與搶先體驗活動參與達成率 100%','IP 連動合作，與 IP 方、原廠三方溝通監修','遊戲美術中文化發包與在地化校調','集團活動「橘子嘉年華」擔任產品窗口','一週年活動：規劃網頁版無償保底、二創競賽、電競品牌合作，爭取原廠全數提案通過，化解社群危機','打破玩家對「遊戲橘子」14 年來的刻板印象，獲集團「高績效員工」表揚']},
+  lab:{badge:'2024-NOW',color:'#8a6ccf',title:'研發中產品',meta:'遊戲橘子｜資深專員｜經典 IP 新作・AI 陪伴模擬經營',
+    intro:'晉升資深專員後，我開始協助集團的自研產品開發。公司過去以代理為主，我運用溝通經驗，在研發與營運之間取得平衡，推動產品進展。',
+    stats:[['千人','東南亞海外測試']],
+    items:['東南亞千人海外測試的規劃與執行','參與全球多國同步上市規劃，提案多語系品牌形象官網','完成玩家焦點座談（FGD）結案報告並向高層匯報，提出敏感玩法用語的調整方案','AI NPC 延伸玩法企劃：非線性世界演化、玩家自創 NPC 可行性評估、上市前預熱活動','規劃 App icon 設計方向','集團服務串接規劃、產品創新商模提案']},
+  ai:{badge:'2026',color:'#2fa596',title:'AI 實作：用 AI 把企劃做出來',meta:'在日常工作中的 AI 實作',
+    intro:'參與 AI 產品的過程，讓我開始思考 AI 如何改變企劃本身的工作。在新楓之谷時，我花了兩個月翻新官網；這次與 AI 協作，3 天就完成了第一版。',
+    stats:[['3 天','完成官網原型'],['10 萬+','省下外包設計費'],['每日','廣告資料自動更新']],
+    items:['遊戲官網原型：前台多分頁、多人多權限後台，繁中／英文／泰文多語系切換','推動「企劃以 AI 製作、工程師把關上線」的新流程，並研究原始碼檢測、弱點掃描等上線規範','受主管肯定，邀請於公司內部分享 AI 製作網頁的流程','廣告情報看板：自動擷取、比較競品廣告，每天更新，供團隊參考','系統說明工具：把企劃文件整理成新人、QA、客服都能查的知識庫','你現在玩的這個遊戲，也是與 AI 協作完成的']},
+  guild:{badge:'NEXT',color:'#c45a8a',title:'尋找下一場冒險',meta:'求職條件與聯絡方式',
+    intro:'我希望加入重視創新的團隊，繼續負責遊戲產品的全生命週期營運，並把 AI 帶進企劃工作，讓團隊做得更快、更好。',
+    groups:[['希望職類',['行銷企劃','產品企劃','產品行銷企劃','活動企劃']],['工作條件',['全職','日班','台北市・新北市','錄取後一個月可上班']]],
+    items:['遊戲全生命週期營運：從上市策略到後續活動','市場分析與數據驅動的營運策略','異業合作與跨部門協作','產品創新與商業模式設計','國際化經營與在地化調整','用 AI 優化團隊的工作流程'],
+    links:[['查看 104 完整履歷',LINK104]]},
+  skills:{badge:'SKILLS',color:'#3fae8f',title:'技能與工具',meta:'Jone 的技能點都點在哪裡',
+    groups:[['營運企劃',['營運活動規劃','產品上市策略','異業合作','市場與競品分析','數據追蹤與優化','在地化校調','玩家研究（FGD）']],
+      ['AI 應用',['Claude','AI 工具應用','AI 協作開發','網頁原型製作','GitLab Pages 部署','工作流程自動化']],
+      ['工具',['Word','Excel','PowerPoint']],['語言',['英文：中等','台語：中等']]]}
+};
+const ORDER=['home','skills','ai','lab','arena','tower','guild'];
+
+/* ---------- story ---------- */
+const TH={
+  pro:{sky:['#7ec8f2','#a6dbf7','#c9ecfb','#e6f7fd'],grass:'#7fcf6b',dirt:'#c99a63',dirt2:'#b58552',props:'village'},
+  maple:{sky:['#5d8fe0','#7eaaf0','#a3c4f7','#cfe0fb'],grass:'#74c46a',dirt:'#c3966a',dirt2:'#a97d55',props:'castle'},
+  arena:{sky:['#e9784a','#f2955a','#f7b874','#fbdca2'],grass:'#a7c05a',dirt:'#c98c5a',dirt2:'#ad744a',props:'arena'},
+  lab:{sky:['#3d2f6b','#55408a','#7356a8','#9a7cc4'],grass:'#6c9a7e',dirt:'#6d5a7e',dirt2:'#5a4a6a',props:'lab'},
+  ai:{sky:['#0f1d33','#152a45','#1c3a57','#244b66'],grass:'#1f5a63',dirt:'#18323f',dirt2:'#122833',props:'city'},
+  end:{sky:['#f3a6b8','#f7c0c9','#fad6d8','#fdebe6'],grass:'#86cf74',dirt:'#cf9d6c',dirt2:'#b8875a',props:'guild'}};
+const CH=[
+  {tag:'序',card:'PROLOGUE',title:'新手村',sub:'一切的起點',th:TH.pro,
+    lines:['在法務部當了一年秘書的 Jone，決定追隨自己對遊戲的熱愛。'],job:'Jone 轉職成為「遊戲營運企劃」！'},
+  {tag:'1',card:'CHAPTER 1',title:'2018・新楓之谷',sub:'營運企劃・MMORPG',th:TH.maple,
+    lines:['加入最熱愛的產品團隊，從穩定營運中學習營運的精髓。'],
+    boss:{name:'老舊官網',kind:'crt',say:'「頁面好慢……手機版還會跑版……」',atk:'老舊官網 使出「無限轉圈圈」！但 Jone 毫不動搖！',
+      skills:[{name:'現代化改版',desc:'兩個月完成官網翻新',pop:'瀏覽 +200%',msg:'Jone 使用「現代化改版」！官網煥然一新！'},
+        {name:'行動版優化',desc:'手機也能順暢瀏覽',pop:'曝光 +30%',msg:'Jone 使用「行動版優化」！手機玩家也能順暢瀏覽了！'},
+        {name:'異業合作',desc:'攜手 4 個品牌助陣',pop:'COMBO ×4',msg:'Jone 發動「異業合作」！ASUS ROG、味丹、PONY、膳魔師前來助陣！'}]},
+    reward:{lv:3,gains:['官網瀏覽人數 +200%','廣告曝光次數 +30%'],learn:['異業合作','官網改版','玩家 KOL 計畫']}},
+  {tag:'2',card:'CHAPTER 2',title:'2020・彈射世界',sub:'產品主企劃・彈珠台動作 RPG',th:TH.arena,
+    lines:['主動請調新產品，第一次擔任「產品主企劃」，上市下載目標達成 122%！'],
+    boss:{name:'一週年負評風暴',kind:'storm',say:'「繁中版一週年沒有大型活動？玩家的不滿正在擴散……」',atk:'負評風暴 降下「社群炎上」！Jone 冷靜清點手上的資源。',
+      skills:[{name:'網頁版無償保底',desc:'讓玩家安心參與',pop:'DAU +31.37%',msg:'Jone 使用「網頁版無償保底」！玩家的不安一掃而空！'},
+        {name:'二創競賽',desc:'讓社群自己熱起來',pop:'熱度延燒 1 個月',msg:'Jone 發起「二創競賽」！社群討論熱度延燒近一個月！'},
+        {name:'說服原廠',desc:'爭取遊戲資源',pop:'提案全數通過',msg:'Jone 使出「說服原廠」！所有活動提案全數通過！'}]},
+    reward:{lv:5,title:'獲得稱號：集團「高績效員工」',gains:['一週年 DAU +31.37%','首 7 日回流 +12.53%','上市下載目標達成 122%'],learn:['產品上市策略','IP 連動合作','危機處理']}},
+  {tag:'3',card:'CHAPTER 3',title:'2024・研發實驗室',sub:'資深專員・自研新作',th:TH.lab,
+    lines:['晉升「資深專員」，挑戰集團自研的 AI 陪伴新作。'],
+    boss:{name:'未知的海外市場',kind:'fog',say:'「迷霧之中，海外玩家到底想要什麼？」',atk:'未知的海外市場 使出「文化差異」！Jone 決定親自去聽玩家的聲音。',
+      skills:[{name:'千人海外測試',desc:'東南亞實地驗證',pop:'千人規模',msg:'Jone 發動「千人海外測試」！東南亞玩家的回饋湧進來了！'},
+        {name:'玩家焦點座談',desc:'聽見真實的聲音',pop:'洞察 GET',msg:'Jone 舉辦「玩家焦點座談」！聽見了玩家真實的聲音！'},
+        {name:'AI NPC 企劃',desc:'讓世界自己演化',pop:'創意 UP',msg:'Jone 提出「AI NPC 延伸玩法」！遊戲世界開始自己演化！'}]},
+    reward:{lv:7,title:'晉升：資深專員',gains:['完成東南亞千人海外測試','參與全球多國同步上市規劃'],learn:['玩家研究','全球化上市規劃','AI NPC 玩法企劃']}},
+  {tag:'4',card:'CHAPTER 4',title:'2026・AI 工坊',sub:'AI 實作',th:TH.ai,
+    lines:['公司需要多語系的品牌官網，但傳統流程要先外包設計，再排隊等工程師……'],
+    boss:{name:'一個月的開發時程',kind:'calendar',say:'「外包設計 10 萬元起，工程排隊 1 個月以上！」',special:'ai'},
+    reward:{lv:8,title:'覺醒：AI 實作派',gains:['約 3 天完成官網原型','省下 10 萬+ 外包設計費','受邀公司內部分享'],learn:['AI 協作開發','廣告情報看板','系統說明工具']}},
+  {tag:'終',card:'EPILOGUE',title:'冒險者公會',sub:'尋找下一個隊伍',th:TH.end,
+    lines:['冒險還沒有結束。Jone 正在尋找下一個隊伍，一起把好遊戲帶給更多玩家！'],final:true}
+];
+const ALL_SKILLS=['營運活動規劃','異業合作','官網改版','玩家 KOL 計畫','產品上市策略','IP 連動合作','危機處理','玩家研究','全球化上市規劃','AI NPC 玩法企劃','AI 協作開發','廣告情報看板','系統說明工具'];
+
+/* ---------- sprites ---------- */
+const OUT='#2a2238';
+const BODY={
+  down:['...hhhhhh...','..hhhhhhhh..','.hhhhhhhhhh.','.hhsssssshh.','.hssssssssh.','.ssessssess.','.ssssssssss.','..ssssssss..','...oooooo...','..oooooooo..','.sdoooooods.','.s.oooooo.s.','...dddddd...'],
+  up:['...hhhhhh...','..hhhhhhhh..','.hhhhhhhhhh.','.hhhhhhhhhh.','.hhhhhhhhhh.','.hhhhhhhhhh.','.shhhhhhhhs.','...ssssss...','...oooooo...','..oooooooo..','.sdoooooods.','.s.oooooo.s.','...dddddd...'],
+  side:['...hhhhhh...','..hhhhhhhh..','.hhhhhhhhhh.','.hhhhhsssss.','.hhhhsssssss','.hhhssssses.','.hhssssssss.','..ssssssss..','...oooooo...','..oooooooo..','..oooooooos.','...oooooo...','...dddddd...']};
+const LEGS={stand:['...pp..pp...','...pp..pp...','...bb..bb...'],
+  sstand:['....pppp....','....pppp....','....bbbbb...'],sa:['...pp..pp...','..bb....pp..','........bb..'],sb:['....pppp....','...pp..pp...','..bb...bb...']};
+const PAL={h:'#3a2a2a',s:'#f6c9a0',e:OUT,o:'#ff8a3d',d:'#d9652a',p:'#3d5a9e',b:OUT};
+const BOT=['...g......','...g......','.cccccc...','cwwwwwwc..','cwkwwkwc..','cwwwwwwc..','.cccccc...','..c..c....'];
+function sprite(c,rows,pal,x,y,s,flip,white){
+  rows.forEach((row,j)=>{for(let i=0;i<row.length;i++){const ch=row[flip?row.length-1-i:i];if(ch!=='.'){c.fillStyle=white?'#fff':pal[ch];c.fillRect(x+i*s,y+j*s,s,s)}}});
+}
+/* bosses: 16x16 grids */
+function makeBoss(kind){
+  const g=Array.from({length:16},()=>Array(16).fill(null)),d=[];
+  const fill=(x,y,col)=>{if(x>=0&&y>=0&&x<16&&y<16)g[y][x]=col};
+  const rect=(x,y,w,h,col)=>{for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++)fill(i,j,col)};
+  const circ=(cx,cy,r,col)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++)if((x-cx)**2+(y-cy)**2<=r*r)fill(x,y,col)};
+  const det=(x,y,col)=>d.push([x,y,col]);
+  if(kind==='crt'){
+    rect(1,1,14,10,'#c3c3d1');rect(2,2,12,8,'#d6d6e2');rect(3,3,10,6,'#2f6b55');
+    [4,6].forEach(y=>rect(3,y,10,1,'#3b7d65'));rect(6,11,4,2,'#a3a3b5');rect(3,13,10,2,'#b3b3c4');
+    [[4,4],[5,4],[4,5],[5,5],[10,4],[11,4],[10,5],[11,5]].forEach(([x,y])=>det(x,y,'#fff'));
+    det(5,5,OUT);det(10,5,OUT);det(4,3,OUT);det(5,3,'#1d4a3a');det(11,3,OUT);det(10,3,'#1d4a3a');
+    [[6,7],[7,8],[8,7],[9,8]].forEach(([x,y])=>det(x,y,OUT));det(13,9,'#ff5d5d');
+  }else if(kind==='storm'){
+    [[5,6,3.6],[9,5,4.6],[12,7,3.2],[8,8,4.2],[3,8,2.6]].forEach(([x,y,r])=>circ(x,y,r,'#6b5b95'));
+    for(let y=0;y<16;y++)for(let x=0;x<16;x++)if(g[y][x]&&(y===0||!g[y-1][x]))fill(x,y,'#9585c4');
+    [[6,7],[7,7],[6,8],[7,8],[10,7],[11,7],[10,8],[11,8]].forEach(([x,y])=>det(x,y,'#fff'));
+    det(7,8,OUT);det(10,8,OUT);det(5,6,OUT);det(6,6,OUT);det(11,6,OUT);det(12,6,OUT);
+    [[7,10],[8,10],[9,10],[10,10]].forEach(([x,y])=>det(x,y,OUT));det(8,11,'#ff5d5d');det(9,11,'#ff5d5d');
+    [[4,12],[5,13],[4,14],[5,15],[12,12],[11,13],[12,14],[11,15]].forEach(([x,y])=>det(x,y,'#f2c14e'));
+  }else if(kind==='fog'){
+    circ(8,7,6.2,'#d9d6f0');rect(2,8,13,5,'#d9d6f0');
+    for(let y=8;y<14;y++)for(let x=0;x<16;x++)if(g[y][x])fill(x,y,'#c4bde6');
+    [3,7,11].forEach(x=>{fill(x,13,'#c4bde6');fill(x+1,13,'#c4bde6')});
+    for(let y=2;y<13;y++)if(g[y][8])fill(8,y,'#b3aadd');
+    for(let x=2;x<15;x++)if(g[5][x])fill(x,5,'#cdc7ec');
+    [[5,6],[5,7],[11,6],[11,7]].forEach(([x,y])=>det(x,y,OUT));det(7,10,OUT);det(8,10,OUT);det(9,10,OUT);
+    [[12,0],[13,0],[14,1],[13,2],[13,4]].forEach(([x,y])=>det(x,y,'#f2c14e'));
+  }else{
+    rect(2,2,12,13,'#fff8e8');rect(2,2,12,3,'#e5735c');rect(2,14,12,1,'#e8dcc0');
+    [[4,3],[5,3],[10,3],[11,3]].forEach(([x,y])=>det(x,y,'#fff'));det(5,3,OUT);det(10,3,OUT);det(4,2,OUT);det(11,2,OUT);
+    [[5,0],[5,1],[10,0],[10,1]].forEach(([x,y])=>det(x,y,'#8a8aa0'));
+    const three=['###','..#','.##','..#','###'],zero=['###','#.#','#.#','#.#','###'];
+    three.forEach((r,j)=>[...r].forEach((c,i)=>{if(c==='#')det(4+i,6+j,OUT)}));
+    zero.forEach((r,j)=>[...r].forEach((c,i)=>{if(c==='#')det(9+i,6+j,OUT)}));
+    for(let x=4;x<12;x++)det(x,12,x%2?OUT:'#fff');
+  }
+  const out=[];
+  for(let y=0;y<16;y++)for(let x=0;x<16;x++)if(!g[y][x]&&[[0,1],[0,-1],[1,0],[-1,0]].some(([a,b])=>g[y+b]&&g[y+b][x+a]))out.push([x,y]);
+  return {g,d,out};
+}
+const BOSS_ART={};['crt','storm','fog','calendar'].forEach(k=>BOSS_ART[k]=makeBoss(k));
+function drawBoss(c,kind,x,y,s,white){
+  const a=BOSS_ART[kind];
+  a.out.forEach(([i,j])=>{c.fillStyle=OUT;c.fillRect(x+i*s,y+j*s,s,s)});
+  for(let j=0;j<16;j++)for(let i=0;i<16;i++)if(a.g[j][i]){c.fillStyle=white?'#fff':a.g[j][i];c.fillRect(x+i*s,y+j*s,s,s)}
+  if(!white)a.d.forEach(([i,j,col])=>{c.fillStyle=col;c.fillRect(x+i*s,y+j*s,s,s)});
+}
+
+/* ---------- scenery ---------- */
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+const R=(x,y,w,h,col)=>{ctx.fillStyle=col;ctx.fillRect(x,y,w,h)};
+const tri=(cx,base,hw,col)=>{for(let i=0;i<=hw;i+=2)R(cx-hw+i,base-i-2,(hw-i)*2,2,col)};
+const ell=(x,y,rx,ry,col)=>{ctx.fillStyle=col;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill()};
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function sky(th,now){
+  th.sky.forEach((col,i)=>R(0,i*50,384,i===3?60:50,col));
+  if(th.props==='city'||th.props==='lab'){for(let i=0;i<40;i++){const x=(i*97)%384,y=(i*53)%150;const on=reduce||((Math.floor(now/400)+i)%5);if(on)R(x,y,i%7?1:2,i%7?1:2,'#e9f1ff')}}
+  if(th.props==='village'||th.props==='castle'||th.props==='guild'){
+    const o=reduce?0:Math.floor(now/90)%440;[[30,40],[200,24],[320,60]].forEach(([x,y],i)=>{const cx=((x+o*(.3+i*.1))%440)-40;
+      R(cx,y,34,8,'#fff');R(cx+6,y-5,18,6,'#fff');R(cx+4,y+8,26,2,'#e5eef8')})}
+  if(th.props==='arena'){ell(300,150,26,26,'#ffe08a');R(0,150,384,4,'rgba(255,255,255,.15)')}
+}
+function props(th){
+  const p=th.props;
+  if(p==='village'){
+    ell(80,205,120,50,'#6fbf73');ell(300,210,150,55,'#5fae66');
+    [[40,150,'#e5735c'],[250,156,'#5b7fd6'],[320,160,'#e0a83a']].forEach(([x,y,col])=>{R(x-1,y-1,38,200-y+1,OUT);R(x,y,36,200-y,'#fff1d6');tri(x+18,y+2,22,OUT);tri(x+18,y,20,col);R(x+14,186,9,14,'#8a5a3b');R(x+4,170,8,7,'#9fd9f2')});
+  }else if(p==='castle'){
+    ell(190,215,240,60,'#5a9ad0');
+    [[30,96,40],[90,120,32],[250,90,46],[320,118,34]].forEach(([x,y,w])=>{R(x-1,y-1,w+2,200-y,OUT);R(x,y,w,200-y,'#c9d6f2');
+      for(let i=0;i<w;i+=8)R(x+i,y-5,5,5,'#c9d6f2');tri(x+w/2,y-4,w/2+4,'#3f5fae');R(x+w/2-4,y+20,8,10,'#2a3a6b');R(x+w/2-4,y+44,8,10,'#2a3a6b')});
+  }else if(p==='arena'){
+    ell(250,200,110,70,OUT);ell(250,200,107,67,'#e0a83a');ell(250,200,85,52,'#f2c14e');
+    for(let x=160;x<350;x+=22)R(x,170,10,30,'#b5832a');
+    [[150,110],[350,110],[250,120]].forEach(([x,y])=>{R(x,y,2,30,OUT);R(x+2,y,14,8,'#ff8a3d')});
+    ell(60,210,90,40,'#c3a85a');
+  }else if(p==='lab'){
+    R(40,90,150,110,OUT);R(42,92,146,108,'#4b3b78');for(let y=104;y<190;y+=16)for(let x=52;x<180;x+=18)R(x,y,10,8,(x+y)%3?'#f2e38a':'#8f7cc4');
+    R(220,120,120,80,OUT);R(222,122,116,78,'#5a4890');[[240],[300]].forEach(([x])=>{R(x,70,14,52,OUT);R(x+2,72,10,50,'#7ff0e0')});
+  }else if(p==='city'){
+    [[10,110,60],[80,80,50],[140,120,40],[200,70,60],[270,100,50],[330,130,50]].forEach(([x,y,w],i)=>{R(x,y,w,200-y,'#123247');
+      for(let yy=y+8;yy<196;yy+=12)for(let xx=x+6;xx<x+w-6;xx+=10)if((xx+yy+i)%4)R(xx,yy,5,5,'#2fa596');});
+    R(228,40,2,30,'#7ff0e0');R(226,36,6,6,'#b8fff4');
+  }else if(p==='guild'){
+    ell(90,210,140,50,'#7cc570');R(170,100,170,100,OUT);R(172,102,166,98,'#fff1d6');tri(255,104,92,OUT);tri(255,102,90,'#c45a8a');
+    R(238,150,34,50,'#8a5a3b');R(200,124,28,18,'#9fd9f2');R(282,124,28,18,'#9fd9f2');R(232,110,46,12,'#f2c14e');
+    [[150,80],[360,80]].forEach(([x,y])=>{R(x,y,2,120,OUT);R(x+2,y,16,10,'#c45a8a')});
+  }
+}
+function ground(th){
+  R(0,198,384,58,th.dirt);R(0,196,384,6,th.grass);R(0,201,384,2,'rgba(0,0,0,.12)');
+  for(let x=4;x<384;x+=23)R(x,212+(x%3)*9,3,2,th.dirt2);
+  if(th.props==='city')for(let x=0;x<384;x+=48){R(x,226,30,1,'#2fa596');R(x+30,226,1,12,'#2fa596');R(x+30,238,18,1,'#2fa596')}
+}
+
+/* ---------- state ---------- */
+const S={scene:'field',ch:0,walk:{from:-30,to:150,start:0,dur:1},boss:null,partner:0,lv:1,
+  lunge:0,beam:0,slash:0,bossLunge:0,hurt:0,shakeUntil:0,flashUntil:0};
+function draw(now){
+  const c=CH[S.ch],th=c.th;
+  let sx=0,sy=0;if(now<S.shakeUntil&&!reduce){sx=Math.round(Math.random()*4-2);sy=Math.round(Math.random()*4-2)}
+  ctx.save();ctx.translate(sx,sy);
+  sky(th,now);props(th);
+  if(S.scene!=='field')R(0,0,384,256,'rgba(12,12,32,.32)');
+  ground(th);
+  if(S.scene==='field'){
+    const w=S.walk,p=Math.min(1,(now-w.start)/w.dur),x=w.from+(w.to-w.from)*p,moving=p<1;
+    const legs=moving?(Math.floor(now/120)%2?LEGS.sa:LEGS.sb):LEGS.sstand;
+    ell(x+12,199,10,3,'rgba(0,0,0,.25)');
+    sprite(ctx,[...BODY.side,...legs],PAL,Math.round(x),166+(moving&&Math.floor(now/120)%2?-1:0),2,false);
+  }else{
+    ell(270,132,52,10,'rgba(0,0,0,.28)');ell(90,200,34,7,'rgba(0,0,0,.3)');
+    if(S.boss){
+      const b=S.boss;let bx=230,by=44+(reduce?0:Math.round(Math.sin(now/300)*3));
+      if(now-S.bossLunge<420){bx-=Math.round(Math.sin((now-S.bossLunge)/420*Math.PI)*36)}
+      if(now<b.flash)bx+=Math.round(Math.random()*6-3);
+      const dying=b.dieAt&&now>b.dieAt;
+      if(!dying||Math.floor((now-b.dieAt)/80)%2)drawBoss(ctx,b.kind,bx,by,5,now<b.flash||dying);
+    }
+    if(S.scene==='battle'){
+      let px=72,py=150;const lp=(now-S.lunge)/420;if(lp>=0&&lp<1){px+=Math.round(Math.sin(lp*Math.PI)*46);py-=Math.round(Math.sin(lp*Math.PI)*12)}
+      const blink=now<S.hurt&&Math.floor(now/70)%2;
+      if(!blink)sprite(ctx,[...BODY.up,...LEGS.stand],PAL,px,py,3,false);
+      if(S.partner){const bob=reduce?0:Math.round(Math.sin(now/220)*3);sprite(ctx,BOT,{g:'#7ff0e0',c:'#2fa596',w:'#e9fffb',k:OUT},28,112+bob,3,false)}
+    }else{
+      const jump=reduce?0:Math.round(Math.abs(Math.sin(now/200))*10);
+      sprite(ctx,[...BODY.down,...LEGS.stand],PAL,174,150-jump,3,false);
+      if(S.partner){const bob=reduce?0:Math.round(Math.sin(now/220)*3);sprite(ctx,BOT,{g:'#7ff0e0',c:'#2fa596',w:'#e9fffb',k:OUT},230,120+bob,3,false)}
+      for(let i=0;i<6;i++){const a=(now/700)+i*Math.PI/3,r=46;const x=Math.round(192+Math.cos(a)*r),y=Math.round(160+Math.sin(a)*r*.6);
+        R(x-1,y-4,2,8,'#f2c14e');R(x-4,y-1,8,2,'#f2c14e')}
+    }
+    const st=(now-S.slash)/260;
+    if(st>=0&&st<1){ctx.strokeStyle='#fff';ctx.lineWidth=4;for(let i=0;i<3;i++){ctx.beginPath();const o=i*18-18;ctx.moveTo(240+o,50);ctx.lineTo(240+o+50*st,50+70*st);ctx.stroke()}}
+    const bt=(now-S.beam)/650;
+    if(bt>=0&&bt<1&&Math.floor(now/50)%3){ctx.strokeStyle='#7ff0e0';ctx.lineWidth=14;ctx.beginPath();ctx.moveTo(60,124);ctx.lineTo(272,86);ctx.stroke();
+      ctx.strokeStyle='#fff';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(60,124);ctx.lineTo(272,86);ctx.stroke()}
+  }
+  ctx.restore();
+  if(now<S.flashUntil){R(0,0,384,256,'rgba(255,255,255,.75)')}
+}
+function loop(now){draw(now);requestAnimationFrame(loop)}
+
+/* ---------- UI helpers ---------- */
+const $=id=>document.getElementById(id);
+const panel=$('panel'),floats=$('floats'),titleEl=$('title'),modal=$('modal');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let runId=0,advanceFn=null,typing=false,finishTyping=null,started=false;
+const STALE={};
+const guard=id=>{if(id!==runId)throw STALE};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function waitTap(timeout){return new Promise(res=>{let t;advanceFn=()=>{clearTimeout(t);advanceFn=null;res()};if(timeout)t=setTimeout(()=>{if(advanceFn){advanceFn=null;res()}},timeout)})}
+function advance(){if(!modal.hidden)return;if(typing&&finishTyping){finishTyping();return}if(advanceFn)advanceFn()}
+function typeText(el,text){return new Promise(res=>{
+  if(reduce){el.textContent=text;res();return}
+  let i=0;typing=true;const iv=setInterval(()=>{i++;el.textContent=text.slice(0,i);if(i>=text.length)done()},28);
+  function done(){clearInterval(iv);el.textContent=text;typing=false;finishTyping=null;res()}
+  finishTyping=done;})}
+async function say(text,id,opt={}){
+  guard(id);
+  panel.innerHTML=`<p class="msg">${opt.who?`<span class="who">${esc(opt.who)}</span>`:''}<span id="msgT"></span><span class="caret" id="caret" hidden>▼</span></p>`;
+  await typeText($('msgT'),text);guard(id);$('caret').hidden=false;
+  await waitTap(opt.auto);guard(id);
+}
+function choose(skills,id,used){
+  guard(id);used=used||new Set();
+  return new Promise(res=>{
+    panel.innerHTML=`<p class="prompt">要使用哪個技能？</p><div class="cmds">${skills.map((s,i)=>`<button class="cmd" type="button" data-i="${i}" ${used.has(s.name)?'disabled':''}><b>${esc(s.name)}</b><span>${esc(s.desc)}</span></button>`).join('')}</div>`;
+    advanceFn=null;const btns=[...panel.querySelectorAll('.cmd')];
+    btns.forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();if(id===runId)res(skills[+b.dataset.i])}));
+    const f=btns.find(b=>!b.disabled);if(f)f.focus({preventScroll:true});
+  });
+}
+function pop(text,x,y,cls){const el=document.createElement('span');el.className='float '+(cls||'');el.textContent=text;el.style.left=x+'%';el.style.top=y+'%';floats.appendChild(el);setTimeout(()=>el.remove(),1500)}
+function setLv(n,bump){S.lv=n;const t=$('lvTag');t.textContent='LV.'+n;if(bump){t.classList.remove('bump');void t.offsetWidth;t.classList.add('bump')}}
+function setSteps(){$('steps').innerHTML=CH.map((c,i)=>`<li class="${i<S.ch?'done':i===S.ch&&started?'now':''}" title="${esc(c.title)}">${c.tag}</li>`).join('')}
+function bossBar(name,hp){const b=$('bossbar');if(name===null){b.hidden=true;return}b.hidden=false;$('bossName').textContent=name;$('bossHp').style.width=hp+'%'}
+async function chapterCard(c,id){
+  $('chTag').textContent=c.card;$('chTitle').textContent=c.title;$('chSub').textContent=c.sub;$('chcard').hidden=false;
+  await waitTap(1700);guard(id);$('chcard').hidden=true;
+}
+
+/* ---------- battle ---------- */
+async function attack(kind,dmg,text){
+  const t=performance.now();
+  if(kind==='beam')S.beam=t;else S.lunge=t;
+  await sleep(kind==='beam'?380:240);
+  const n=performance.now();
+  if(kind!=='beam')S.slash=n;
+  S.boss.flash=n+280;S.shakeUntil=n+260;if(kind==='beam')S.flashUntil=n+160;
+  S.boss.hp=Math.max(0,S.boss.hp-dmg);bossBar(S.boss.name,S.boss.hp);
+  pop(text,70,24,kind==='weak'?'weak':kind==='beam'?'big':'');
+}
+async function bossHits(){const t=performance.now();S.bossLunge=t;await sleep(220);S.hurt=performance.now()+600;S.shakeUntil=performance.now()+300}
+async function battle(c,id){
+  const b=c.boss;S.scene='battle';S.partner=0;S.boss={kind:b.kind,name:b.name,hp:100,flash:0,dieAt:0};
+  S.flashUntil=performance.now()+200;bossBar(b.name,100);
+  await say(`${b.name} 出現了！${b.say}`,id);
+  if(b.special==='ai'){
+    await choose([{name:'照傳統流程推進',desc:'外包設計＋排隊等工程'}],id);
+    attack('weak',1,'-1');
+    await say('Jone 照傳統流程推進……只造成 1 點傷害！時程實在太長了！',id,{auto:2600});
+    await say('就在這時——',id,{auto:1200});
+    S.partner=1;S.flashUntil=performance.now()+220;pop('AI 夥伴登場！',22,40,'big');
+    await say('AI 夥伴 加入了隊伍！',id,{who:'NEW'});
+    await choose([{name:'AI 協作開發',desc:'和 AI 一起把想法做出來'}],id);
+    attack('beam',100,'3 天完成！');
+    await say('Jone 與 AI 協作開發！約 3 天就完成了多語系官網原型！',id,{auto:2800});
+  }else{
+    const used=new Set();
+    let sk=await choose(b.skills,id,used);used.add(sk.name);
+    attack('hit',56,sk.pop);await say(sk.msg,id,{auto:2600});
+    bossHits();await say(b.atk,id,{auto:2600});
+    sk=await choose(b.skills,id,used);
+    attack('hit',100,sk.pop);await say(sk.msg,id,{auto:2600});
+  }
+  guard(id);S.boss.dieAt=performance.now();await sleep(900);guard(id);S.boss=null;bossBar(null);
+}
+function reward(c,from,id){
+  guard(id);const r=c.reward;
+  return new Promise(res=>{
+    panel.innerHTML=`<div class="reward">
+      <div class="rw-head"><span class="rw-up">LEVEL UP!</span><span class="rw-lv">LV.${from} → LV.${r.lv}</span><span class="rw-beat">擊敗了「${esc(c.boss.name)}」</span></div>
+      ${r.title?`<p class="rw-title">${esc(r.title)}</p>`:''}
+      <ul class="gains">${r.gains.map(g=>`<li>${esc(g)}</li>`).join('')}</ul>
+      <div class="learn">學會技能：${r.learn.map(s=>`<span class="sk">${esc(s)}</span>`).join('')}</div>
+      <button class="btn small" type="button" id="rwBtn">繼續冒險 ▶</button></div>`;
+    const done=()=>{advanceFn=null;if(id===runId)res()};
+    $('rwBtn').addEventListener('click',e=>{e.stopPropagation();done()});
+    $('rwBtn').focus({preventScroll:true});advanceFn=done;
+  });
+}
+
+/* ---------- story runner ---------- */
+async function chapter(i,id){
+  const c=CH[i];S.ch=i;S.scene='field';S.boss=null;S.partner=0;bossBar(null);setSteps();
+  const t=performance.now();S.walk={from:-30,to:150,start:t,dur:reduce?1:1700};
+  panel.innerHTML='<p class="msg">……</p>';
+  await chapterCard(c,id);
+  const left=S.walk.start+S.walk.dur-performance.now();if(left>0){await sleep(left);guard(id)}
+  for(const l of c.lines)await say(l,id);
+  if(c.job){pop('LV.1 營運企劃',40,45,'big');setLv(1,true);await say(c.job,id)}
+  if(c.boss){
+    S.shakeUntil=performance.now()+500;await sleep(450);guard(id);
+    await battle(c,id);
+    S.scene='victory';const from=S.lv;setLv(c.reward.lv,true);pop('LEVEL UP!',50,26,'big');
+    await reward(c,from,id);
+  }
+  if(c.final){
+    S.partner=1;
+    panel.innerHTML=`<p class="msg">恭喜通關！要看看 Jone 的角色能力卡嗎？</p><div class="final">
+      <button class="btn small" type="button" id="fCard">查看角色能力卡</button>
+      <a class="btn small ghost" href="${LINK104}" target="_blank" rel="noopener">104 完整履歷 ↗</a>
+      <button class="btn small ghost" type="button" id="fAgain">再玩一次</button></div>`;
+    $('fCard').addEventListener('click',e=>{e.stopPropagation();openSheet()});
+    $('fAgain').addEventListener('click',e=>{e.stopPropagation();restart()});
+    setSteps();S.ch=i;$('steps').lastElementChild.className='done';
+    openSheet();
+  }
+}
+async function run(from){
+  const id=++runId;advanceFn=null;typing=false;finishTyping=null;
+  try{for(let i=from;i<CH.length;i++)await chapter(i,id)}catch(e){if(e!==STALE)console.error(e)}
+}
+function start(from){started=true;titleEl.hidden=true;if(!from)setLv(1);run(from||0)}
+function restart(){closeModal();floats.innerHTML='';setLv(1);start(0)}
+
+/* ---------- modals ---------- */
+function renderPlace(p){
+  return `<span class="badge" style="--badge:${p.color}">${esc(p.badge)}</span>
+  <h2>${esc(p.title)}</h2><p class="m-meta">${esc(p.meta)}</p>
+  ${p.intro?`<p class="m-intro" style="--badge:${p.color}">${esc(p.intro)}</p>`:''}
+  ${p.stats?`<div class="stats">${p.stats.map(([n,l])=>`<div class="stat"><b>${esc(n)}</b><span>${esc(l)}</span></div>`).join('')}</div>`:''}
+  ${p.groups?p.groups.map(([g,t])=>`<div class="group"><h3>${esc(g)}</h3><div class="tags">${t.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></div>`).join(''):''}
+  ${p.items?`<ul class="m-list" style="--badge:${p.color}">${p.items.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`:''}
+  ${p.links?`<div class="links">${p.links.map(([l,h])=>`<a class="btn" href="${esc(h)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`).join('')}</div>`:''}`;
+}
+let lastFocus=null;
+function showModal(html,buttons){
+  lastFocus=document.activeElement;$('mBody').innerHTML=html;
+  const f=$('mFoot');f.innerHTML='';
+  buttons.forEach(([label,fn,ghost],i)=>{const b=document.createElement('button');b.type='button';b.className='btn'+(ghost?' ghost':'');b.textContent=label;b.addEventListener('click',fn);f.appendChild(b)});
+  modal.hidden=false;$('mBody').scrollTop=0;f.lastElementChild.focus({preventScroll:true});
+}
+function closeModal(){if(modal.hidden)return;modal.hidden=true;if(lastFocus&&document.contains(lastFocus))lastFocus.focus({preventScroll:true})}
+function openOverview(){
+  showModal(`<div class="ov"><span class="badge" style="--badge:#2a2238">RESUME</span><h2 id="mTitle">張家華 Jone｜履歷總覽</h2><p class="m-meta">遊戲營運企劃・8 年以上經驗・AI 實作派</p></div>`+
+    ORDER.map(id=>`<section class="ov">${renderPlace(PLACES[id])}</section>`).join(''),[[started?'回到遊戲':'返回',closeModal]]);
+}
+function openSheet(){
+  const bars=[['溝通協調',90,'#ff8a3d'],['策略企劃',85,'#5b7fd6'],['執行力',95,'#e0a83a'],['AI 實作',99,'#2fa596']];
+  showModal(`<span class="badge" style="--badge:#e0a83a">STATUS</span>
+    <div class="sheet"><div class="portrait"><canvas id="pc" width="48" height="64"></canvas></div>
+      <div class="id"><span class="badge" style="--badge:#2a2238">LV.8</span><h2 id="mTitle">張家華 Jone</h2><p class="m-meta">職業：遊戲營運企劃・資深專員</p>
+      <div class="tags"><span class="tag hot">集團「高績效員工」</span><span class="tag hot">AI 實作派</span></div></div></div>
+    <div class="group"><h3>能力值</h3><div class="bars">${bars.map(([l,v,c])=>`<div><span>${l}</span><i style="--v:${v}%;--c:${c}"></i></div>`).join('')}</div></div>
+    <div class="group"><h3>戰績</h3><div class="stats">${[['+200%','官網瀏覽人數'],['122%','上市下載目標達成'],['+31.37%','一週年活動 DAU'],['3 天','AI 完成官網原型']].map(([n,l])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('')}</div></div>
+    <div class="group"><h3>習得技能</h3><div class="tags">${ALL_SKILLS.map(s=>`<span class="tag">${esc(s)}</span>`).join('')}</div></div>
+    <div class="group"><h3>正在尋找的隊伍</h3><div class="tags">${['行銷企劃','產品企劃','產品行銷企劃','活動企劃','台北市・新北市','全職'].map(s=>`<span class="tag">${s}</span>`).join('')}</div></div>
+    <div class="links"><a class="btn" href="${LINK104}" target="_blank" rel="noopener">查看 104 完整履歷 ↗</a></div>`,
+    [['履歷總覽',openOverview,true],['再玩一次',restart,true],['關閉',closeModal]]);
+  const pc=$('pc').getContext('2d');sprite(pc,[...BODY.down,...LEGS.stand],PAL,0,0,4,false);
+}
+
+/* ---------- input ---------- */
+$('screen').addEventListener('click',advance);
+$('panelWrap').addEventListener('click',e=>{if(e.target.closest('button,a'))return;advance()});
+modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeModal();return}
+  if(!modal.hidden||!started)return;
+  const t=e.target;
+  if(t&&t.classList&&t.classList.contains('cmd')&&(e.key==='ArrowDown'||e.key==='ArrowUp'||e.key==='ArrowRight'||e.key==='ArrowLeft')){
+    e.preventDefault();const bs=[...panel.querySelectorAll('.cmd:not(:disabled)')];const i=bs.indexOf(t);
+    const n=bs[(i+((e.key==='ArrowDown'||e.key==='ArrowRight')?1:-1)+bs.length)%bs.length];n&&n.focus();return}
+  if(e.key==='Enter'||e.key===' '||e.code==='KeyZ'){
+    if(t&&t.closest&&t.closest('button,a'))return;
+    e.preventDefault();advance();
+  }
+});
+$('startBtn').addEventListener('click',e=>{e.stopPropagation();start(0)});
+$('skipBtn').addEventListener('click',e=>{e.stopPropagation();openOverview()});
+$('ovBtn').addEventListener('click',openOverview);
+
+/* ---------- boot ---------- */
+function boot(data){
+  data=data||{};setSteps();
+  if(data.started&&Number.isInteger(data.ch)&&data.ch<CH.length){setLv(data.lv||1);start(data.ch)}
+  requestAnimationFrame(loop);
+}
+try{window.claude?.hot?.snapshot?.(()=>({started,ch:S.ch,lv:S.lv}))}catch(e){}
+window.claude?.hot?.ready?window.claude.hot.ready(boot):boot(window.claude?.hot?.data??{});
+})();
+</script>
+
+</body>
+</html>
